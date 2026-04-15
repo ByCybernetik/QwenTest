@@ -6,14 +6,17 @@ set(CMAKE_CXX_STANDARD 17)
 # Find Vulkan package
 find_package(Vulkan REQUIRED)
 
+# Find SDL2 package
+find_package(SDL2 REQUIRED)
+
 # Add executable
 add_executable(vulkan_triangle main.cpp)
 
-# Link Vulkan libraries
-target_link_libraries(vulkan_triangle Vulkan::Vulkan)
+# Link libraries
+target_link_libraries(vulkan_triangle Vulkan::Vulkan SDL2::SDL2)
 
 # Include directories
-target_include_directories(vulkan_triangle PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_include_directories(vulkan_triangle PRIVATE ${Vulkan_INCLUDE_DIRS} ${SDL2_INCLUDE_DIRS})
 
 # Find glslc compiler
 find_program(GLSLC glslc HINTS $ENV{VULKAN_SDK}/bin)

@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/vulkan_triangle.dir/main.cpp.o -o vulkan_triangle  /usr/lib/x86_64-linux-gnu/libvulkan.so 
+/usr/bin/c++ CMakeFiles/vulkan_triangle.dir/main.cpp.o -o vulkan_triangle  /usr/lib/x86_64-linux-gnu/libvulkan.so /usr/lib/x86_64-linux-gnu/libSDL2.so 

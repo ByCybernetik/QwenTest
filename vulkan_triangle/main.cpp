@@ -1,4 +1,6 @@
 #include <vulkan/vulkan.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_vulkan.h>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -11,12 +13,14 @@ const uint32_t HEIGHT = 600;
 class VulkanTriangle {
 public:
     void run() {
+        initWindow();
         initVulkan();
         mainLoop();
         cleanup();
     }
 
 private:
+    SDL_Window* window = nullptr;
     VkInstance instance;
     VkSurfaceKHR surface;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -41,6 +45,17 @@ private:
 
     const int MAX_FRAMES_IN_FLIGHT = 2;
 
+    void initWindow() {
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+            throw std::runtime_error("Failed to initialize SDL2");
+        }
+
+        window = SDL_CreateWindow("Vulkan Triangle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_VULKAN);
+        if (!window) {
+            throw std::runtime_error("Failed to create SDL window");
+        }
+    }
+
     void initVulkan() {
         createInstance();
         createSurface();
@@ -57,7 +72,19 @@ private:
     }
 
     void mainLoop() {
-        drawFrame();
+        bool running = true;
+        SDL_Event event;
+        
+        while (running) {
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_QUIT) {
+                    running = false;
+                }
+            }
+            
+            drawFrame();
+        }
+        
         vkDeviceWaitIdle(device);
     }
 
@@ -85,8 +112,26 @@ private:
         vkDestroySwapchainKHR(device, swapChain, nullptr);
         vkDestroyCommandPool(device, commandPool, nullptr);
         vkDestroyDevice(device, nullptr);
-        vkDestroySurfaceKHR(instance, surface, nullptr);
+        
+        if (surface != VK_NULL_HANDLE) {
+            vkDestroySurfaceKHR(instance, surface, nullptr);
+        }
         vkDestroyInstance(instance, nullptr);
+        
+        if (window) {
+            SDL_DestroyWindow(window);
+        }
+        SDL_Quit();
+    }
+
+    std::vector<const char*> getRequiredExtensions() {
+        uint32_t extensionCount = 0;
+        SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, nullptr);
+        
+        std::vector<const char*> extensions(extensionCount);
+        SDL_Vulkan_GetInstanceExtensions(window, &extensionCount, extensions.data());
+        
+        return extensions;
     }
 
     void createInstance() {
@@ -102,14 +147,9 @@ private:
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
-        uint32_t extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data());
-
-        createInfo.enabledExtensionCount = 0;
-
-        VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo = nullptr;
+        auto extensions = getRequiredExtensions();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
 
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
@@ -117,9 +157,9 @@ private:
     }
 
     void createSurface() {
-        // Using null surface for headless rendering demo
-        // In a real application, you would create a window surface here
-        std::cout << "Note: This is a minimal example. For actual rendering, you need a windowing system (GLFW/SDL)." << std::endl;
+        if (SDL_Vulkan_CreateSurface(window, instance, &surface) == SDL_FALSE) {
+            throw std::runtime_error("Failed to create Vulkan surface");
+        }
     }
 
     void pickPhysicalDevice() {
