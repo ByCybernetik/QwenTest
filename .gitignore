@@ -1,0 +1,29 @@
+```
+# Build directories
+vulkan_triangle/build/
+
+# Compiled objects and executables
+*.o
+*.obj
+*.out
+vulkan_triangle/build/vulkan_triangle
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+# Shader compilation artifacts
+vulkan_triangle/build/shaders/*.spv
+
+# Temporary and log files
+*.log
+*.tmp
+
+# Dependencies and virtual environments
+node_modules/
+venv/
+.venv/
+__pycache__/
+```

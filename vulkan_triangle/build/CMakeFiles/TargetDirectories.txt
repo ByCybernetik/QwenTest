@@ -1,0 +1,4 @@
+/workspace/vulkan_triangle/build/CMakeFiles/vulkan_triangle.dir
+/workspace/vulkan_triangle/build/CMakeFiles/shaders.dir
+/workspace/vulkan_triangle/build/CMakeFiles/edit_cache.dir
+/workspace/vulkan_triangle/build/CMakeFiles/rebuild_cache.dir
