@@ -5,6 +5,10 @@
 #include <stdexcept>
 #include <vector>
 #include <cstdint>
+#include <optional>
+#include <cstring>
+#include <algorithm>
+#include <array>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -183,19 +187,6 @@ private:
         }
     }
 
-    bool isDeviceSuitable(VkPhysicalDevice dev) {
-        QueueFamilyIndices indices = findQueueFamilies(dev);
-        bool extensionsSupported = checkDeviceExtensionSupport(dev);
-
-        bool swapChainAdequate = false;
-        if (extensionsSupported) {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(dev);
-            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-        }
-
-        return indices.isComplete() && extensionsSupported && swapChainAdequate;
-    }
-
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
@@ -210,6 +201,19 @@ private:
         std::vector<VkSurfaceFormatKHR> formats;
         std::vector<VkPresentModeKHR> presentModes;
     };
+
+    bool isDeviceSuitable(VkPhysicalDevice dev) {
+        QueueFamilyIndices indices = findQueueFamilies(dev);
+        bool extensionsSupported = checkDeviceExtensionSupport(dev);
+
+        bool swapChainAdequate = false;
+        if (extensionsSupported) {
+            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(dev);
+            swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        }
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate;
+    }
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice dev) {
         QueueFamilyIndices indices;
@@ -409,7 +413,7 @@ private:
     }
 
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
-        if (capabilities.currentWidth != 0xFFFFFFFF) {
+        if (capabilities.currentExtent.width != 0xFFFFFFFFu) {
             return capabilities.currentExtent;
         }
 
@@ -421,8 +425,8 @@ private:
             static_cast<uint32_t>(height)
         };
 
-        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+        actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(actualExtent.width, capabilities.maxImageExtent.width));
+        actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(actualExtent.height, capabilities.maxImageExtent.height));
 
         return actualExtent;
     }
