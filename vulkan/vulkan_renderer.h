@@ -5,6 +5,15 @@
 #include <vector>
 #include <string>
 
+struct TextureInfo {
+    VkImage image;
+    VkImageView imageView;
+    VkSampler sampler;
+    VkDeviceMemory imageMemory;
+    uint32_t width;
+    uint32_t height;
+};
+
 class VulkanDevice {
 public:
     void createInstance();
@@ -75,15 +84,41 @@ public:
     VkPipelineLayout getLayout() const { return pipelineLayout; }
     VkRenderPass getRenderPass() const { return renderPass; }
 
-private:
+protected:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     VkRenderPass renderPass;
 
     static std::vector<char> readFile(const std::string& filename);
     VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code);
-    void createRenderPass(VkDevice device, VkFormat swapChainImageFormat);
-    void createGraphicsPipeline(VkDevice device, VkExtent2D swapChainExtent);
+    virtual void createRenderPass(VkDevice device, VkFormat swapChainImageFormat);
+    virtual void createGraphicsPipeline(VkDevice device, VkExtent2D swapChainExtent);
+};
+
+class VulkanTexturePipeline : public VulkanPipeline {
+public:
+    void create(VkDevice device, VkRenderPass renderPass, VkExtent2D swapChainExtent);
+    void loadTexture(VkDevice device, VkPhysicalDevice physicalDevice, VkQueue graphicsQueue,
+                     VkCommandPool commandPool, const std::string& texturePath, TextureInfo& textureInfo);
+    void cleanupTextures(VkDevice device, TextureInfo& textureInfo);
+
+private:
+    void createRenderPass(VkDevice device, VkFormat swapChainImageFormat) override;
+    void createGraphicsPipeline(VkDevice device, VkExtent2D swapChainExtent) override;
+    void createImage(VkDevice device, VkPhysicalDevice physicalDevice, uint32_t width, uint32_t height,
+                     VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+                     VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+    VkImageView createImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+    void transitionImageLayout(VkDevice device, VkQueue graphicsQueue, VkCommandPool commandPool,
+                               VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+    void copyBufferToImage(VkDevice device, VkQueue graphicsQueue, VkCommandPool commandPool,
+                           VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+    void createBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size,
+                      VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                      VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter,
+                            VkMemoryPropertyFlags properties);
+    void createTextureSampler(VkDevice device, VkSampler& sampler);
 };
 
 class VulkanCommandBuffer {

@@ -1,56 +1,26 @@
 ```
-# Build artifacts
+# Compiled and build artifacts
 *.o
 *.obj
-*.a
-*.lib
-*.so
-*.dll
 *.exe
+*.dll
+*.so
+*.a
 *.out
 
-# CMake build directory
-build/
-cmake-build-*/
-
 # Dependencies
-vendor/
+third_party/
 
 # Logs and temp files
 *.log
 *.tmp
-*.swp
-
-# Environment
-.env
-.env.local
-*.env.*
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# OS specific
-.DS_Store
-Thumbs.db
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# MyPy
-.mypy_cache/
-
-# PyTest
-.pytest_cache/
-
-# Distribution / packaging
+# Build directories
+build/
 dist/
-*.tar.gz
-*.whl
-*.egg
-*.egg-info/
+target/
 ```
