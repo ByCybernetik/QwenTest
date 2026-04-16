@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(VulkanTriangle VERSION 1.0)
+project(VulkanApps VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,17 +8,43 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 
-# Add executable
-add_executable(${PROJECT_NAME} main.cpp)
+# Vulkan library sources
+set(VULKAN_SOURCES
+    vulkan/vulkan_device.cpp
+    vulkan/vulkan_swapchain.cpp
+    vulkan/vulkan_pipeline.cpp
+    vulkan/vulkan_command_buffer.cpp
+    vulkan/vulkan_texture.cpp
+)
+
+set(VULKAN_HEADERS
+    vulkan/vulkan_types.h
+    vulkan/vulkan_renderer.h
+)
+
+# Add executable for triangle test application
+add_executable(VulkanTriangle test/main.cpp ${VULKAN_SOURCES} ${VULKAN_HEADERS})
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE 
+target_link_libraries(VulkanTriangle PRIVATE 
     Vulkan::Vulkan 
     glfw
 )
 
 # Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_include_directories(VulkanTriangle PRIVATE ${CMAKE_SOURCE_DIR})
+
+# Add executable for texture viewer application
+add_executable(TextureViewer test/texture_viewer.cpp ${VULKAN_SOURCES} ${VULKAN_HEADERS})
+
+# Link libraries
+target_link_libraries(TextureViewer PRIVATE 
+    Vulkan::Vulkan 
+    glfw
+)
+
+# Include directories (including third_party for stb_image.h)
+target_include_directories(TextureViewer PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/third_party)
 
 # Shader compilation
 set(SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/shaders")
@@ -60,14 +86,22 @@ endforeach()
 # Custom target for shaders
 add_custom_target(shaders ALL DEPENDS ${SHADER_OUTPUTS})
 
-# Ensure shaders are built before the main target
-add_dependencies(${PROJECT_NAME} shaders)
+# Ensure shaders are built before both targets
+add_dependencies(VulkanTriangle shaders)
+add_dependencies(TextureViewer shaders)
 
-# Copy shaders to binary directory (already done by compilation above)
-# But let's also ensure they're copied to the same directory as executable
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+# Copy shaders to binary directory for VulkanTriangle
+add_custom_command(TARGET VulkanTriangle POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory 
         ${SHADER_BINARY_DIR}/shaders 
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders
-    COMMENT "Copying shaders to executable directory"
+        $<TARGET_FILE_DIR:VulkanTriangle>/shaders
+    COMMENT "Copying shaders to VulkanTriangle executable directory"
+)
+
+# Copy shaders to binary directory for TextureViewer
+add_custom_command(TARGET TextureViewer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory 
+        ${SHADER_BINARY_DIR}/shaders 
+        $<TARGET_FILE_DIR:TextureViewer>/shaders
+    COMMENT "Copying shaders to TextureViewer executable directory"
 )
