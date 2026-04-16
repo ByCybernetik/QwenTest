@@ -3,22 +3,21 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "../third_party/stb_image.h"
 
 #include "../vulkan/vulkan_renderer.h"
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+// Window dimensions are defined in vulkan_types.h
 
 class TextureViewerApplication {
 public:
     void run(const std::string& texturePath) {
         initWindow();
-        initVulkan();
-        mainLoop(texturePath);
+        initVulkan(texturePath);
+        mainLoop();
         cleanup();
     }
 
@@ -44,11 +43,12 @@ private:
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan Texture Viewer", nullptr, nullptr);
     }
 
-    void initVulkan() {
+    void initVulkan(const std::string& texturePath) {
         device.createInstance();
-        device.createSurface(window, device.getInstance(), (VkSurfaceKHR*)&device.getSurface());
-        device.pickPhysicalDevice(device.getInstance(), *(VkSurfaceKHR*)&device.getSurface());
-        device.createLogicalDevice(*(VkSurfaceKHR*)&device.getSurface());
+        VkSurfaceKHR surface;
+        device.createSurface(window, device.getInstance(), &surface);
+        device.pickPhysicalDevice(device.getInstance(), surface);
+        device.createLogicalDevice(surface);
 
         // Create swap chain with a temporary render pass first
         VkRenderPass tempRenderPass = VK_NULL_HANDLE;
@@ -96,7 +96,7 @@ private:
         }
 
         swapChain.create(device.getDevice(), device.getPhysicalDevice(), 
-                        *(VkSurfaceKHR*)&device.getSurface(), window, renderPass);
+                        surface, window, renderPass);
         
         // Destroy temporary render pass, pipeline will create its own
         vkDestroyRenderPass(device.getDevice(), renderPass, nullptr);
@@ -106,7 +106,7 @@ private:
 
         // Load texture
         commandBuffer.create(device.getDevice(), device.getPhysicalDevice(), 
-                            *(VkSurfaceKHR*)&device.getSurface());
+                            surface);
         
         pipeline.loadTexture(device.getDevice(), device.getPhysicalDevice(), 
                             device.getGraphicsQueue(), commandBuffer.getCommandPool(),
@@ -182,7 +182,7 @@ private:
         vkUpdateDescriptorSets(device.getDevice(), 1, &descriptorWrite, 0, nullptr);
     }
 
-    void mainLoop(const std::string& texturePath) {
+    void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
             drawFrame();
@@ -228,7 +228,7 @@ private:
         renderPassInfo.clearValueCount = 1;
         renderPassInfo.pClearValues = &clearColor;
 
-        vkCmdBeginRenderPass(commandBuffer.getBuffers()[0], &renderPassInfo, VK_INLINE);
+        vkCmdBeginRenderPass(commandBuffer.getBuffers()[0], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         vkCmdBindPipeline(commandBuffer.getBuffers()[0], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.getPipeline());
 
@@ -350,11 +350,13 @@ private:
         commandBuffer.cleanup(device.getDevice());
         pipeline.cleanup(device.getDevice());
         swapChain.cleanup(device.getDevice());
-        device.cleanup(device.getInstance(), *(VkSurfaceKHR*)&device.getSurface());
+        device.cleanup(device.getInstance(), surface);
 
         glfwDestroyWindow(window);
         glfwTerminate();
     }
+
+    VkSurfaceKHR surface;
 };
 
 int main(int argc, char* argv[]) {

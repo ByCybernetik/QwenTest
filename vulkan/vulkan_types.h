@@ -4,8 +4,13 @@
 #include <optional>
 #include <vector>
 
+// Window dimensions - can be overridden by including file
+#ifndef WIDTH
 const uint32_t WIDTH = 800;
+#endif
+#ifndef HEIGHT
 const uint32_t HEIGHT = 600;
+#endif
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 #ifdef NDEBUG
