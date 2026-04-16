@@ -8,8 +8,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 
-# Add executable
-add_executable(${PROJECT_NAME} main.cpp)
+# Vulkan library sources
+set(VULKAN_SOURCES
+    vulkan/vulkan_device.cpp
+    vulkan/vulkan_swapchain.cpp
+    vulkan/vulkan_pipeline.cpp
+    vulkan/vulkan_command_buffer.cpp
+)
+
+set(VULKAN_HEADERS
+    vulkan/vulkan_types.h
+    vulkan/vulkan_renderer.h
+)
+
+# Add executable for test application
+add_executable(${PROJECT_NAME} test/main.cpp ${VULKAN_SOURCES} ${VULKAN_HEADERS})
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -18,7 +31,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # Include directories
-target_include_directories(${PROJECT_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
 
 # Shader compilation
 set(SHADER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/shaders")
